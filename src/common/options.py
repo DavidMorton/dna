@@ -3,7 +3,7 @@ import os
 class Options:
     @property
     def data_folder(self):
-        data_folder = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '.data'))
+        data_folder = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', '.data'))
         os.makedirs(data_folder, exist_ok=True)
         return data_folder
     
@@ -21,3 +21,12 @@ class Options:
         os.makedirs(result, exist_ok=True)
         return result
     
+    @property
+    def frequency_raw_combined_parquet(self):
+        result = os.path.join(self.data_folder, 'frequency_raw_combined.parquet')
+        return result
+    
+    @property
+    def frequency_combined_refined(self):
+        result = os.path.join(self.data_folder, 'frequency_refined.parquet')
+        return result

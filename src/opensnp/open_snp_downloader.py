@@ -1,5 +1,5 @@
 import os
-from .options import Options
+from ..common import Options
 
 class OpenSNPDownloader:
     def __init__(self):

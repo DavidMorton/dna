@@ -15,8 +15,8 @@ class GeneticDataToDataFrameConverter:
             return readers[0]
         return None
 
-    def read_data(self, filename):
+    def read_data(self, filename, throw_on_error=False):
         reader = self._get_reader(filename)
         if reader is not None:
-            return reader.get_file_data(filename)
+            return reader.get_file_data(filename, throw_on_error)
         return None

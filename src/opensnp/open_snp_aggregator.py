@@ -1,4 +1,4 @@
-from .options import Options
+from ..common import Options
 from .open_snp_progress import OpenSNPProgress
 from .genetic_data_to_dataframe_converter import GeneticDataToDataFrameConverter
 import pandas as pd
