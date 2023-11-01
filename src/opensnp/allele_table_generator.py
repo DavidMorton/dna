@@ -2,10 +2,11 @@ from ..common import Options
 import os
 import pandas as pd
 from tqdm import trange
+from dependency_injector.wiring import Provide
 
 class AlleleTableGenerator:
-    def __init__(self):
-        self._options = Options()
+    def __init__(self, options:Options = Provide['Options']):
+        self._options = options
 
     def _get_alleles(self, filename):
         allele_filename = os.path.join(self._options.data_folder, 'alleles_' + os.path.basename(filename))

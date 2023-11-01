@@ -1,12 +1,15 @@
 from .ancestry_reader import AncestryReader
 from .twentythree_reader import TwentyThreeReader
 from .genetic_file_reader import GeneticFileReader
+from dependency_injector.wiring import Provide
 
 class GeneticDataToDataFrameConverter:
-    def __init__(self):
+    def __init__(self,
+                 ancestry_reader:AncestryReader = Provide['AncestryReader'],
+                 twenty_three_reader:TwentyThreeReader = Provide['TwentyThreeReader']):
         self._readers = {
-            'ancestry.txt': AncestryReader(),
-            '23andme.txt': TwentyThreeReader()
+            'ancestry.txt': ancestry_reader,
+            '23andme.txt': twenty_three_reader
         }
 
     def _get_reader(self, filename)-> GeneticFileReader:

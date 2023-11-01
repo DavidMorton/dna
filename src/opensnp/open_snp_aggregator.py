@@ -3,12 +3,15 @@ from .open_snp_progress import OpenSNPProgress
 from .genetic_data_to_dataframe_converter import GeneticDataToDataFrameConverter
 import pandas as pd
 import os
+from dependency_injector.wiring import Provide
 
 class OpenSNPAggregator:
-    def __init__(self):
-        self._options = Options()
-        self._opensnp_progress = OpenSNPProgress()
-        self._dataframe_converter = GeneticDataToDataFrameConverter()
+    def __init__(self, options:Options = Provide['Options'],
+                 opensnp_progress:OpenSNPProgress = Provide['OpenSNPProgress'],
+                 dataframe_converter:GeneticDataToDataFrameConverter = Provide['GeneticDataToDataFrameConverter']):
+        self._options = options
+        self._opensnp_progress = opensnp_progress
+        self._dataframe_converter = dataframe_converter
     
     def aggregate_50_users(self):
         unprocessed_user_files = self._opensnp_progress.get_unprocessed_user_data()

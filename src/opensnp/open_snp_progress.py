@@ -1,10 +1,11 @@
 from ..common import Options
 import os
 import pandas as pd
+from dependency_injector.wiring import Provide
 
 class OpenSNPProgress:
-    def __init__(self):
-        self._options = Options()
+    def __init__(self, options:Options = Provide['Options']):
+        self._options = options
         self._df:pd.DataFrame = None
 
     @property

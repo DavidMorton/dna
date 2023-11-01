@@ -1,20 +1,26 @@
 from ..opensnp import GeneticDataToDataFrameConverter, OpenSNPDownloader, OpenSNPAggregator, AlleleTableGenerator
 from ..common import Options
 from ..ncbi import *
-
 import os
 import pandas as pd
+from dependency_injector.wiring import Provide
 
 class DNAAnalyzer:
-    def __init__(self):
-        self._genetic_data_reader = GeneticDataToDataFrameConverter()
-        self._opensnp_downloader = OpenSNPDownloader()
-        self._opensnp_aggregator = OpenSNPAggregator()
-        self._allele_table_generator = AlleleTableGenerator()
-        self._ncbi_dataframe_generator = NCBIDataFrameGenerator()
-        self._citations_dataframe_generator = CitationsDataframeGenerator()
-
-        self._options = Options()
+    def __init__(self, 
+                 genetic_data_reader:GeneticDataToDataFrameConverter = Provide['GeneticDataToDataFrameConverter'],
+                 opensnp_downloader:OpenSNPDownloader = Provide['OpenSNPDownloader'],
+                 opensnp_aggregator:OpenSNPAggregator = Provide['OpenSNPAggregator'],
+                 allele_table_generator:AlleleTableGenerator = Provide['AlleleTableGenerator'],
+                 ncbi_dataframe_generator:NCBIDataFrameGenerator = Provide['NCBIDataFrameGenerator'],
+                 citations_dataframe_generator:CitationsDataframeGenerator = Provide['CitationsDataframeGenerator'],
+                 options:Options = Provide['Options']):
+        self._genetic_data_reader = genetic_data_reader
+        self._opensnp_downloader = opensnp_downloader
+        self._opensnp_aggregator = opensnp_aggregator
+        self._allele_table_generator = allele_table_generator
+        self._ncbi_dataframe_generator = ncbi_dataframe_generator
+        self._citations_dataframe_generator = citations_dataframe_generator
+        self._options = options
 
     def get_cached_merge_dataframe(self, filename):
         file_location = os.path.join(self._options.output_cache_folder(filename), 'raw_merged.parquet')

@@ -3,11 +3,14 @@ from .ncbi_data_downloader import NCBIDataDownloader
 import os, json
 import pandas as pd
 from tqdm import trange
+from dependency_injector.wiring import Provide
 
 class NCBIDataFrameGenerator:
-    def __init__(self):
-        self._options = Options()
-        self._ncbi_data_downloader = NCBIDataDownloader()
+    def __init__(self,
+                 options:Options = Provide['Options'],
+                 ncbi_data_downloader:NCBIDataDownloader = Provide['NCBIDataDownloader']):
+        self._options = options
+        self._ncbi_data_downloader = ncbi_data_downloader
 
     def get_gene_names(self, json_data, gene_ids):
         genes_found = {gene['id']:gene['locus'] for all_ann in json_data['primary_snapshot_data']['allele_annotations'] for ass_ann in all_ann['assembly_annotation'] for gene in ass_ann['genes']}

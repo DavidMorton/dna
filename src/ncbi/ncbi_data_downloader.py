@@ -4,10 +4,11 @@ import requests
 from tqdm import trange
 from datetime import datetime, timedelta
 import time
+from dependency_injector.wiring import Provide
 
 class NCBIDataDownloader:
-    def __init__(self):
-        self._options = Options()
+    def __init__(self, options:Options = Provide['Options']):
+        self._options = options
 
     def download_individual_ncbi_data(self, rsid, prev_start_time=None):
 

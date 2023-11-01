@@ -2,9 +2,11 @@ from ..common import Options
 import os, requests
 import pandas as pd
 
+from dependency_injector.wiring import Provide
+
 class CitationsDataframeGenerator:
-    def __init__(self):
-        self._options = Options()
+    def __init__(self, options:Options = Provide['Options']):
+        self._options = options
 
     def _download_citations(self):
         if not os.path.exists(self._options.citations_text_file):
