@@ -2,3 +2,4 @@ pandas==2.1.2
 pyarrow==13.0.0
 ipykernel
 tqdm
+requests

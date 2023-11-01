@@ -40,9 +40,9 @@ class OpenSNPProgress:
         
 
         result = pd.read_parquet(self._dataframe_path)
-        filenames = os.listdir(self._options.combined_user_data_subset_directory)
-        result.loc[~result['out_file'].isin(filenames), ['processed','errored','out_file']] = [False, False, None]
-        result.to_parquet(self._dataframe_path)
+        #filenames = os.listdir(self._options.combined_user_data_subset_directory)
+        #result.loc[~result['out_file'].isin(filenames), ['processed','errored','out_file']] = [False, False, None]
+        #result.to_parquet(self._dataframe_path)
         return result
     
     def get_next_out_filename(self):

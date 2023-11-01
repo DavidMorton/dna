@@ -18,7 +18,10 @@ class GeneticFileReader(ABC):
             return None
         
     def get_user_id(self, filename):
-        return int(os.path.basename(filename).split('_')[0].replace('user', ''))
+        try:
+            return int(os.path.basename(filename).split('_')[0].replace('user', ''))
+        except:
+            return 0
     
     def post_process_genome_data(self, result):
         result['position'] = pd.to_numeric(result['position'], errors='coerce')

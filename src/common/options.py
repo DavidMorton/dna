@@ -30,3 +30,29 @@ class Options:
     def frequency_combined_refined(self):
         result = os.path.join(self.data_folder, 'frequency_refined.parquet')
         return result
+    
+    @property
+    def ncbi_data_cache(self):
+        result = os.path.join(self.data_folder, 'raw_ncbi_data')
+        os.makedirs(result, exist_ok=True)
+        return result
+    
+    @property
+    def ncbi_dataframe_parquet(self):
+        result = os.path.join(self.data_folder, 'ncbi_data.parquet')
+        return result
+    
+    @property
+    def citations_text_file(self):
+        result = os.path.join(self.data_folder, 'var_citations.txt')
+        return result
+    
+    @property
+    def citations_parquet_file(self):
+        result = os.path.join(self.data_folder, 'var_citations.parquet')
+        return result
+    
+    def output_cache_folder(self, filename):
+        result = os.path.join(self.data_folder,'output',os.path.basename(filename).split('.')[0])
+        os.makedirs(result, exist_ok=True)
+        return result

@@ -69,6 +69,9 @@ class AlleleTableGenerator:
         reduced['alleles'] = reduced['alleles'].str.replace('None','')
         reduced = reduced.groupby(['rsid','chromosome','alleles'])['count'].sum()
         reduced = reduced.reset_index(drop=False)
+        total_samples = reduced.groupby(['rsid', 'chromosome'])['count'].sum().reset_index(drop=False).rename(columns={'count':'total_count'})
+        reduced = reduced.merge(total_samples, on=['rsid', 'chromosome'], how='left')
+        reduced['frequency'] = reduced['count'] / reduced['total_count']
         reduced.to_parquet(outfile)
         return reduced
     
