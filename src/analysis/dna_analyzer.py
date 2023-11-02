@@ -48,7 +48,9 @@ class DNAAnalyzer:
         std = dna_ncbi_augmented[(dna_ncbi_augmented['variant_type'] == 'std') & ((dna_ncbi_augmented['alleles'] == (dna_ncbi_augmented['inserted']*2)) | (dna_ncbi_augmented['alleles'] == dna_ncbi_augmented['inserted']))]
 
         detected = pd.concat([detected_snvs, detected_delinv, dd, ii, std]).reset_index(drop=True)
+        
         detected = detected.sort_values(by=['chromosome','position'])
-        detected.to_excel(os.path.join(self._options.output_cache_folder(filename), f'{os.path.basename(filename).split(".")[0]}_variations.xlsx'))
 
+        detected.to_excel(os.path.join(self._options.output_cache_folder(filename), f'{os.path.basename(filename).split(".")[0]}_variations.xlsx'), index=False)
+        detected.to_parquet(os.path.join(self._options.output_cache_folder(filename), f'{os.path.basename(filename).split(".")[0]}_variations.parquet'))
         pass

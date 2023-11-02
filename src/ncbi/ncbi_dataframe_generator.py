@@ -40,6 +40,7 @@ class NCBIDataFrameGenerator:
             return 'snv', f'{deleted}>{inserted}', deleted, inserted
         return 'unknown', 'unknown', deleted, inserted
 
+    
     def _process_single_frequency(self, frequency):
         # hgvs = {h['hgvs'] for h in rsdata['primary_snapshot_data']['allele_annotations'][0]['assembly_annotation'][0]['genes'][0]['rnas']}
         # {(allele['allele']['spdi']['deleted_sequence'], allele['allele']['spdi']['inserted_sequence']) for placement in rsdata['primary_snapshot_data']['placements_with_allele'] for allele in placement['alleles'] if allele['hgvs'] in hgvs}
@@ -81,6 +82,16 @@ class NCBIDataFrameGenerator:
 
         return frequency_table
 
+    def _process_assembly_annotation(self, assembly_annotation, placement_with_alleles):
+        hgvs = {r['hgvs'] for g in assembly_annotation['genes'] for r in g['rnas'] if 'hgvs' in r}
+        unique_deleted_and_inserted = {(allele['allele']['spdi']['deleted_sequence'], allele['allele']['spdi']['inserted_sequence']) for placement in placement_with_alleles for allele in placement['alleles'] if allele['hgvs'] in hgvs}
+        variant_descriptions = [self._get_variant_description(d,i) for d,i in unique_deleted_and_inserted]
+        return variant_descriptions
+    
+    def _process_assembly_annotations(self, assembly_annotations, placements_with_alleles):
+        result = [x for annotation in assembly_annotations for x in self._process_assembly_annotation(annotation, placements_with_alleles)]
+        return pd.DataFrame(result, columns=['variant_type','description','deleted','inserted'])
+
     def _process_frequencies(self, frequencies):
         frequency_details = [self._process_single_frequency(frequency) for frequency in frequencies]
         frequency_df = pd.DataFrame(frequency_details, columns=['variant_type','description','deleted','inserted','allele_count','total_count'])
@@ -96,28 +107,30 @@ class NCBIDataFrameGenerator:
         return disease_names, clinical_significance
 
     def _process_clinicals(self, clinicals):
-        diseases = ', '.join({disease_name for clinical in clinicals for disease_name in clinical['disease_names'] if disease_name not in ['not provided']})
+        diseases = ', '.join({disease_name for clinical in clinicals for disease_name in clinical['disease_names'] if disease_name not in ['not provided', 'not specified']})
         clinical_significances = ', '.join({sig for clinical in clinicals for sig in clinical['clinical_significances']})
         return diseases, clinical_significances
 
-    def _process_allele_annotation(self, allele_annotation):
+    def _process_allele_annotation(self, allele_annotation, placement_with_alleles):
         if len(allele_annotation['frequency']) == 0:
             return None
         
+        assembly_annotations = self._process_assembly_annotations(allele_annotation['assembly_annotation'], placement_with_alleles)
         frequency_table = self._process_frequencies(allele_annotation['frequency'])
+        annotations_w_frequency = assembly_annotations.merge(frequency_table, on=assembly_annotations.columns.tolist(), how='right')
         diseases, significances = self._process_clinicals(allele_annotation['clinical'])
         gene_locus, gene_name = self._get_genes(allele_annotation['assembly_annotation'])
         submission_count = len(allele_annotation['submissions'])
 
-        frequency_table['diseases'] = diseases
-        frequency_table['significance'] = significances
-        frequency_table['submissions'] = submission_count
-        frequency_table['gene_locus'] = gene_locus
-        frequency_table['gene_name'] = gene_name
-        return frequency_table
+        annotations_w_frequency['diseases'] = diseases
+        annotations_w_frequency['significance'] = significances
+        annotations_w_frequency['submissions'] = submission_count
+        annotations_w_frequency['gene_locus'] = gene_locus
+        annotations_w_frequency['gene_name'] = gene_name
+        return annotations_w_frequency
     
-    def _process_allele_annotations(self, allele_annotations):
-        dataframes = [self._process_allele_annotation(annotation) for annotation in allele_annotations]
+    def _process_allele_annotations(self, allele_annotations, placements_with_allele):
+        dataframes = [self._process_allele_annotation(annotation, placements_with_allele) for annotation in allele_annotations]
         dataframes = [x for x in dataframes if x is not None]
         if len(dataframes) > 0:
             return pd.concat(dataframes)
@@ -138,7 +151,11 @@ class NCBIDataFrameGenerator:
         if len(allele_annotations) == 0:
             return result
         
-        return self._process_allele_annotations(allele_annotations)
+        placements_with_allele = primary_snapshot_data['placements_with_allele']
+        if len(placements_with_allele) == 0:
+            return result
+        
+        return self._process_allele_annotations(allele_annotations, placements_with_allele)
 
     def _get_rsid_json_file(self, rsid):
         json_filename = os.path.join(self._options.ncbi_data_cache, f'{rsid}.json')
