@@ -20,11 +20,12 @@ class NCBIDataDownloader:
             if (prev_start_time is not None) and ((prev_start_time + timedelta(seconds=1)) > now):
                 diff:datetime = (prev_start_time + timedelta(seconds=1))
                 sleeptime = abs((now - diff).total_seconds())
+                #time.sleep(0.001)
                 time.sleep(sleeptime)
             
             rsid_number = int(rsid.replace('rs', ''))
             start_time = datetime.now()
-            response = requests.get(f'https://api.ncbi.nlm.nih.gov/variation/v0/refsnp/{rsid_number}')
+            response = requests.get(f'https://api.ncbi.nlm.nih.gov/variation/v0/refsnp/{rsid_number}', timeout=5)
             if response.status_code == 200:
                 content = response.content.decode()
                 with open(targetpath, 'w') as f:
@@ -37,7 +38,7 @@ class NCBIDataDownloader:
 
     def download_ncbi_data(self, merged_dna, allow_download = True):
         if not allow_download:
-            return True
+            return False
         # don't do any downloading between 9 and 4:00
         if 9 < datetime.now().hour < 15:
             print('No new bulk download during work hours')

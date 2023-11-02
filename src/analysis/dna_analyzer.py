@@ -39,7 +39,11 @@ class DNAAnalyzer:
         citations_dataframe = self._citations_dataframe_generator.get_dataframe()
         studied_rsids = citations_dataframe[['rsid']].drop_duplicates()
         merged_dna_data_with_studied_rsids = merged_dna.merge(studied_rsids, on=['rsid'], how='inner')
-        ncbi_data = self._ncbi_dataframe_generator.get_dataframe_of_data(merged_dna_data_with_studied_rsids)
+        ncbi_data = self._ncbi_dataframe_generator.get_dataframe_of_data(merged_dna_data_with_studied_rsids, allow_download=True, force_regenerate_dataframe=True)
         dna_ncbi_augmented = merged_dna.merge(ncbi_data, on=['rsid'], how='inner')
+        detected_snvs = dna_ncbi_augmented[dna_ncbi_augmented.apply(lambda x:x['inserted'] in x['alleles'], axis=1) & (dna_ncbi_augmented['variation_type'] == 'snv')]
+        detected_delinv = dna_ncbi_augmented[(dna_ncbi_augmented['alleles'] == 'DI') & (dna_ncbi_augmented['significance'] != 'None')]
+        detected = pd.concat([detected_snvs, detected_delinv])
+        detected.to_excel(os.path.join(self._options.output_cache_folder(filename), 'detected_variations.xlsx'))
 
         pass

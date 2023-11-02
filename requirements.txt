@@ -4,3 +4,4 @@ ipykernel
 tqdm
 requests
 dependency_injector
+openpyxl

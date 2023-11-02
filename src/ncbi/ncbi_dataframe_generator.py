@@ -19,7 +19,7 @@ class NCBIDataFrameGenerator:
         return ', '.join(gene_names)
     
     def get_clinical_implications(self, json_data):
-        result = (None, None, None)
+        result = (None, None, None, 0)
         if 'primary_snapshot_data' not in json_data:
             return result
         
@@ -38,8 +38,6 @@ class NCBIDataFrameGenerator:
         if len(clinical_data) == 0:
             return result
         
-        disease_names = set()
-        gene_ids = set()
         results = []
         for x in clinical_data:
             disease_name = x['disease_names'][0]
@@ -49,19 +47,16 @@ class NCBIDataFrameGenerator:
                     'gene': self.get_gene_names(json_data, x['gene_ids']),
                     'significance': x['clinical_significances'][0]
                 })
-            # for disease in x['disease_names']:
-            #     disease_names.add(disease)    
-            # for gene in x['gene_ids']:
-            #     gene_name = self.get_gene_name(json_data, gene)
-            #     gene_ids.add(gene_name)
+
         if len(results) > 0:
             results = list(pd.DataFrame(results).drop_duplicates().T.to_dict().values())
             disease = ', '.join([x['disease_name'] for x in results])
             gene = ', '.join({x['gene'] for x in results})
             significance = ', '.join({x['significance'] for x in results})
-            results = (disease, gene, significance)
+            citations = len(json_data['citations'])
+            results = (disease, gene, significance, citations)
         else:
-            return (None, None, None)
+            return result
         
 
         return results
@@ -125,6 +120,10 @@ class NCBIDataFrameGenerator:
         print('Regenerating NIH data on genomes...')
         files = [x for x in os.listdir(self._options.ncbi_data_cache) if x.endswith('.json')]
 
+        if merged_dna is not None:
+            requested_rsids = merged_dna['rsid'].tolist()
+            files = [x for x in files if x.replace('.json','') in requested_rsids]
+
         result_list = []
         for file,_ in zip(files, trange(len(files) - 1)):
             rsid = file.replace('.json', '')
@@ -139,7 +138,12 @@ class NCBIDataFrameGenerator:
             for rsid_datum in rsid_data:
                 result_list.append((rsid,) + rsid_datum)
         
-        return pd.DataFrame(result_list, columns=['rsid','variation_type','description','deleted','inserted','disease','gene','significance'])
+        dataframe = pd.DataFrame(result_list, columns=['rsid','variation_type','description','deleted','inserted','disease','gene','significance', 'citations'])
+        intcolumns = ['citations']
+        stringcolumns = [x for x in dataframe.columns if x not in intcolumns]
+        dataframe[stringcolumns] = dataframe[stringcolumns].astype(str)
+        dataframe[intcolumns] = dataframe[intcolumns].fillna(0).astype(int)
+        return dataframe
 
     def get_dataframe_of_data(self, merged_dna, allow_download=True, force_regenerate_dataframe=False):
         new_data_found = self._ncbi_data_downloader.download_ncbi_data(merged_dna, allow_download)
@@ -147,10 +151,18 @@ class NCBIDataFrameGenerator:
         path = self._options.ncbi_dataframe_parquet
         if os.path.exists(path) and (not force_regenerate_dataframe):
             existing_data = pd.read_parquet(path)
+            merged_subset = merged_dna[~merged_dna['rsid'].isin(existing_data['rsid'])]
+            if (len(merged_subset) > 0) and (not force_regenerate_dataframe):
+                added_data = self._regenerate_dataframe(merged_subset)
+                existing_data = pd.concat([existing_data, added_data])
+                existing_data.to_parquet(path)
+                return existing_data
+            
             if not new_data_found:
                 return existing_data
         
         dataframe = self._regenerate_dataframe(merged_dna)
+
         dataframe.to_parquet(path)
 
         return dataframe
