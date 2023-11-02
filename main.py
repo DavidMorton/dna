@@ -15,4 +15,4 @@ container:Container = Container()
 Container.wire(container)
 
 m = Main()
-m.run_analysis('.data/dna_samples/dan.23andme.txt')
+m.run_analysis('.data/dna_samples/david.23andme.txt')

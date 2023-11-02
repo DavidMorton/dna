@@ -83,14 +83,15 @@ class NCBIDataFrameGenerator:
         return frequency_table
 
     def _process_assembly_annotation(self, assembly_annotation, placement_with_alleles):
-        hgvs = {r['hgvs'] for g in assembly_annotation['genes'] for r in g['rnas'] if 'hgvs' in r}
-        unique_deleted_and_inserted = {(allele['allele']['spdi']['deleted_sequence'], allele['allele']['spdi']['inserted_sequence']) for placement in placement_with_alleles for allele in placement['alleles'] if allele['hgvs'] in hgvs}
-        variant_descriptions = [self._get_variant_description(d,i) for d,i in unique_deleted_and_inserted]
+        #hgvs = {r['hgvs'] for g in assembly_annotation['genes'] for r in g['rnas'] if 'hgvs' in r}
+        #unique_deleted_and_inserted = {(allele['allele']['spdi']['deleted_sequence'], allele['allele']['spdi']['inserted_sequence']) for placement in placement_with_alleles for allele in placement['alleles'] if allele['hgvs'] in hgvs}
+        unique_deleted_and_inserted = {(x['allele']['spdi']['deleted_sequence'],x['allele']['spdi']['inserted_sequence'],x['hgvs'].endswith('=')) for p in placement_with_alleles if p['is_ptlp'] for x in p['alleles']}
+        variant_descriptions = [self._get_variant_description(d,i) + (std,) for d,i,std in unique_deleted_and_inserted]
         return variant_descriptions
     
     def _process_assembly_annotations(self, assembly_annotations, placements_with_alleles):
         result = [x for annotation in assembly_annotations for x in self._process_assembly_annotation(annotation, placements_with_alleles)]
-        return pd.DataFrame(result, columns=['variant_type','description','deleted','inserted'])
+        return pd.DataFrame(result, columns=['variant_type','description','deleted','inserted','is_ref'])
 
     def _process_frequencies(self, frequencies):
         frequency_details = [self._process_single_frequency(frequency) for frequency in frequencies]
@@ -115,26 +116,42 @@ class NCBIDataFrameGenerator:
         assembly_annotations = self._process_assembly_annotations(allele_annotation['assembly_annotation'], placement_with_alleles)
         if len(allele_annotation['frequency']) > 0:
             frequency_table = self._process_frequencies(allele_annotation['frequency'])
-            annotations_w_frequency = assembly_annotations.merge(frequency_table, on=assembly_annotations.columns.tolist(), how='right')
+            annotations_w_frequency = assembly_annotations.merge(frequency_table, on=['variant_type','description','deleted','inserted'], how='right')
         else:
             annotations_w_frequency = assembly_annotations.copy()
             annotations_w_frequency[['allele_count','total_count','observed_frequency']] = [0,0,0]
-        diseases, significances = self._process_clinicals(allele_annotation['clinical'])
-        gene_locus, gene_name = self._get_genes(allele_annotation['assembly_annotation'])
-        submission_count = len(allele_annotation['submissions'])
 
-        annotations_w_frequency['diseases'] = diseases
-        annotations_w_frequency['significance'] = significances
-        annotations_w_frequency['submissions'] = submission_count
-        annotations_w_frequency['gene_locus'] = gene_locus
-        annotations_w_frequency['gene_name'] = gene_name
+        #diseases, significances = self._process_clinicals(allele_annotation['clinical'])
+        #gene_locus, gene_name = self._get_genes(allele_annotation['assembly_annotation'])
+        #submission_count = len(allele_annotation['submissions'])
+
+        #annotations_w_frequency[['diseases', 'significances']] = diseases, significances
+        #annotations_w_frequency.loc[annotations_w_frequency['variant_type'] == 'std', ['diseases','significances']] = ['','']
+        #annotations_w_frequency['significance'] = significances
+        #annotations_w_frequency['submissions'] = submission_count
+        #annotations_w_frequency['gene_locus'] = gene_locus
+        #annotations_w_frequency['gene_name'] = gene_name
         return annotations_w_frequency
     
     def _process_allele_annotations(self, allele_annotations, placements_with_allele):
         dataframes = [self._process_allele_annotation(annotation, placements_with_allele) for annotation in allele_annotations]
         dataframes = [x for x in dataframes if x is not None]
         if len(dataframes) > 0:
-            return pd.concat(dataframes)
+            result = pd.concat(dataframes).drop_duplicates()
+
+            #diseases_significance = [self._process_clinicals(allele_annotation['clinical']) for allele_annotation in allele_annotations]
+            diseases = ', '.join({disease_name for allele_annotation in allele_annotations for clinical in allele_annotation['clinical'] for disease_name in clinical['disease_names'] if disease_name not in ['not_provided','not_specified']})
+            significances = ', '.join({sig for allele_annotation in allele_annotations for clinical in allele_annotation['clinical'] for sig in clinical['clinical_significances']})
+            loci = ', '.join({gene['locus'] for allele_annotation in allele_annotations for assembly_annotation in allele_annotation['assembly_annotation'] for gene in assembly_annotation['genes']})
+            names = ', '.join({gene['name'] for allele_annotation in allele_annotations for assembly_annotation in allele_annotation['assembly_annotation'] for gene in assembly_annotation['genes']})
+            submission_count = len([sub for allele_annotation in allele_annotations for sub in allele_annotation['submissions']])
+
+            result[['diseases','significances','submissions','gene_locus','gene_name']] = [diseases,significances,submission_count,loci,names]
+            result['is_ref'] = result['is_ref'].fillna(result['description'] == 'std')
+            result.loc[result['is_ref'],['diseases','significances']] = ''
+            result = result.drop(columns='is_ref')
+            return result
+
         return None
     
 
