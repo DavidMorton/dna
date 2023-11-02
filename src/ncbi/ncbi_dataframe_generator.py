@@ -141,11 +141,11 @@ class NCBIDataFrameGenerator:
         
         return pd.DataFrame(result_list, columns=['rsid','variation_type','description','deleted','inserted','disease','gene','significance'])
 
-    def get_dataframe_of_data(self, merged_dna):
-        new_data_found = self._ncbi_data_downloader.download_ncbi_data(merged_dna)
+    def get_dataframe_of_data(self, merged_dna, allow_download=True, force_regenerate_dataframe=False):
+        new_data_found = self._ncbi_data_downloader.download_ncbi_data(merged_dna, allow_download)
 
         path = self._options.ncbi_dataframe_parquet
-        if os.path.exists(path):
+        if os.path.exists(path) and (not force_regenerate_dataframe):
             existing_data = pd.read_parquet(path)
             if not new_data_found:
                 return existing_data

@@ -35,9 +35,11 @@ class NCBIDataDownloader:
             return False, datetime.now()
 
 
-    def download_ncbi_data(self, merged_dna):
+    def download_ncbi_data(self, merged_dna, allow_download = True):
+        if not allow_download:
+            return True
         # don't do any downloading between 9 and 4:00
-        if 9 < datetime.now().hour < 16:
+        if 9 < datetime.now().hour < 15:
             print('No new bulk download during work hours')
             return True
         
