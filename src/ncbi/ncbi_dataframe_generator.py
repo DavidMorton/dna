@@ -112,12 +112,13 @@ class NCBIDataFrameGenerator:
         return diseases, clinical_significances
 
     def _process_allele_annotation(self, allele_annotation, placement_with_alleles):
-        if len(allele_annotation['frequency']) == 0:
-            return None
-        
         assembly_annotations = self._process_assembly_annotations(allele_annotation['assembly_annotation'], placement_with_alleles)
-        frequency_table = self._process_frequencies(allele_annotation['frequency'])
-        annotations_w_frequency = assembly_annotations.merge(frequency_table, on=assembly_annotations.columns.tolist(), how='right')
+        if len(allele_annotation['frequency']) > 0:
+            frequency_table = self._process_frequencies(allele_annotation['frequency'])
+            annotations_w_frequency = assembly_annotations.merge(frequency_table, on=assembly_annotations.columns.tolist(), how='right')
+        else:
+            annotations_w_frequency = assembly_annotations.copy()
+            annotations_w_frequency[['allele_count','total_count','observed_frequency']] = [0,0,0]
         diseases, significances = self._process_clinicals(allele_annotation['clinical'])
         gene_locus, gene_name = self._get_genes(allele_annotation['assembly_annotation'])
         submission_count = len(allele_annotation['submissions'])
@@ -192,12 +193,15 @@ class NCBIDataFrameGenerator:
             rsid = file.replace('.json', '')
             rsid_data = self._get_data_for_single_rsid(rsid)
 
-            if rsid_data is None:
+            if (rsid_data is None) or (len(rsid_data) == 0):
                 continue
 
             rsid_data['rsid'] = rsid
             result_list.append(rsid_data)
-
+        
+        if len(result_list) == 0:
+            return None
+        
         dataframe = pd.concat(result_list)
         intcolumns = ['submissions','total_count','allele_count']
         floatcolumns = ['observed_frequency']
@@ -216,7 +220,7 @@ class NCBIDataFrameGenerator:
             merged_subset = merged_dna[~merged_dna['rsid'].isin(existing_data['rsid'])]
             if (len(merged_subset) > 0) and (not force_regenerate_dataframe):
                 added_data = self._regenerate_dataframe(merged_subset)
-                if len(added_data) > 0:
+                if (added_data is not None) and (len(added_data) > 0):
                     existing_data = pd.concat([existing_data, added_data])
                     existing_data.to_parquet(path)
                 return existing_data

@@ -54,7 +54,7 @@ class NCBIDataDownloader:
         new_data = False
         
         start_time = datetime.now() - timedelta(seconds=10)
-        t_range = trange(len(genotypes) - 1)
+        t_range = trange(len(genotypes))
         for genotype,t in zip(genotypes, t_range):
             result, start_time = self.download_individual_ncbi_data(genotype, start_time)
             new_data = result or new_data
