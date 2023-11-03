@@ -6,4 +6,4 @@ requests
 dependency_injector
 openpyxl
 natsort
-dask
+dask[distributed]
