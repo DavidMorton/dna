@@ -10,9 +10,9 @@ class Main():
     def run_analysis(self, filename:str):
         self._dna_analyzer.analyze(filename)
 
+if __name__ == '__main__':
+    container:Container = Container()
+    Container.wire(container)
 
-container:Container = Container()
-Container.wire(container)
-
-m = Main()
-m.run_analysis('.data/dna_samples/glenn.23andme.txt')
+    m = Main()
+    m.run_analysis('.data/dna_samples/glenn.23andme.txt')

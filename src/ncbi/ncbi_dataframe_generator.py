@@ -4,6 +4,7 @@ import os, json
 import pandas as pd
 from tqdm import trange
 from dependency_injector.wiring import Provide
+from dask.distributed import Client, progress
 
 class NCBIDataFrameGenerator:
     def __init__(self,
@@ -198,6 +199,15 @@ class NCBIDataFrameGenerator:
 
         return clinvar
     
+    def _get_rsid_data(self, rsid):
+        rsid_data = self._get_data_for_single_rsid(rsid)
+
+        if (rsid_data is None) or (len(rsid_data) == 0):
+            return None
+        
+        rsid_data['rsid'] = rsid
+        return rsid_data
+
     def _regenerate_dataframe(self, merged_dna = None):
         print('Regenerating NIH data on genomes...')
         files = [x for x in os.listdir(self._options.ncbi_data_cache) if x.endswith('.json')]
@@ -207,15 +217,16 @@ class NCBIDataFrameGenerator:
             files = [x for x in files if x.replace('.json','') in requested_rsids]
 
         result_list = []
-        for file,_ in zip(files, trange(len(files) - 1)):
-            rsid = file.replace('.json', '')
-            rsid_data = self._get_data_for_single_rsid(rsid)
+        
+        rsids = [file.replace('.json','') for file in files]
 
-            if (rsid_data is None) or (len(rsid_data) == 0):
-                continue
-
-            rsid_data['rsid'] = rsid
-            result_list.append(rsid_data)
+        client = Client()
+        futures = client.map(self._get_rsid_data, rsids)
+        fut = client.compute(futures)
+        progress(fut)
+        
+        results = [r.result() for r in futures]
+        result_list = [r for r in results if r is not None]
         
         if len(result_list) == 0:
             return None
