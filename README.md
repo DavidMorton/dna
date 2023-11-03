@@ -9,7 +9,7 @@ My family history is filled with cancer, and I plan to buck the familial trend. 
 
 I am not a doctor, nor a geneticist. There is more than a small chance that the analysis you recieve while running this codebase is wrong. I did my best, given the time I had to play with it, but frankly, I didn't spend a ton of time putting this together, so take it all with a grain of salt. Genetics is a highly complex field, and there's a reason people get PhD's in the topic.
 
-If you have any concerns with what the application tells you, don't be dumb. Get professional genetic counseling from a CLIA-certified laboratory before doing anything else. 23andMe and Ancestry.com are not CLIA-certified, so their data isn't held to the same high standard as medical grade genetics laboratories.
+If you have any concerns with what the application tells you, don't be dumb. Get professional genetic counseling from a CLIA-certified laboratory before doing anything else. 23andMe and Ancestry.com are not CLIA-certified, so their data isn't held to the same high standard as medical grade genetics laboratories. Also, did I mention I'm not a doctor or geneticist? Yes. Yes I did.
 
 **I REPEAT: DO NOT MAKE ANY MAJOR MEDICAL DECISIONS BASED ON THIS CODE.**
 
