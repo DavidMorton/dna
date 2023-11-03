@@ -99,7 +99,6 @@ class NCBIDataFrameGenerator:
         frequency_table = frequency_df.groupby(by=['variant_type','description','deleted','inserted'])[['allele_count','total_count']].sum().reset_index(drop=False)
         frequency_table = self._duplication_reduction(frequency_table)
         frequency_table = self._merge_standard(frequency_table)
-        frequency_table['observed_frequency'] = frequency_table['allele_count'] / frequency_table['total_count']
         return frequency_table
     
     def _process_clinical(self, clinical):
@@ -119,7 +118,7 @@ class NCBIDataFrameGenerator:
             annotations_w_frequency = assembly_annotations.merge(frequency_table, on=['variant_type','description','deleted','inserted'], how='right')
         else:
             annotations_w_frequency = assembly_annotations.copy()
-            annotations_w_frequency[['allele_count','total_count','observed_frequency']] = [0,0,0]
+            annotations_w_frequency[['allele_count','total_count']] = [0,0]
 
         #diseases, significances = self._process_clinicals(allele_annotation['clinical'])
         #gene_locus, gene_name = self._get_genes(allele_annotation['assembly_annotation'])
@@ -138,6 +137,8 @@ class NCBIDataFrameGenerator:
         dataframes = [x for x in dataframes if x is not None]
         if len(dataframes) > 0:
             result = pd.concat(dataframes).drop_duplicates()
+            result = result.groupby(['variant_type','description','deleted','inserted','is_ref'])[['allele_count','total_count']].sum().reset_index(drop=False)
+            result['observed_frequency'] = (result['allele_count'] / result['total_count']).fillna(0.0)
 
             #diseases_significance = [self._process_clinicals(allele_annotation['clinical']) for allele_annotation in allele_annotations]
             diseases = ', '.join({disease_name for allele_annotation in allele_annotations for clinical in allele_annotation['clinical'] for disease_name in clinical['disease_names'] if disease_name not in ['not_provided','not_specified']})
