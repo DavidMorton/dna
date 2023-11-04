@@ -1,4 +1,4 @@
-from ..opensnp import GeneticDataToDataFrameConverter
+from ..file_readers import GeneticDataToDataFrameConverter
 from ..common import Options
 from ..ncbi import *
 import os
