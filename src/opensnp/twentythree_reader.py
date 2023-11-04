@@ -1,6 +1,5 @@
 from .genetic_file_reader import GeneticFileReader
 import pandas as pd
-import numpy as np
 
 class TwentyThreeReader(GeneticFileReader):
     def _get_file_data_impl(self, filename):

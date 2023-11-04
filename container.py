@@ -8,14 +8,10 @@ class Container(containers.DeclarativeContainer):
     CitationsDataframeGenerator = providers.Singleton(CitationsDataframeGenerator)
     NCBIDataDownloader = providers.Singleton(NCBIDataDownloader)
     NCBIDataFrameGenerator = providers.Singleton(NCBIDataFrameGenerator)
-    AlleleTableGenerator = providers.Singleton(AlleleTableGenerator)
     AncestryReader = providers.Singleton(AncestryReader)
     TwentyThreeReader = providers.Singleton(TwentyThreeReader)
     GeneticFileReader = providers.Singleton(GeneticFileReader)
     GeneticDataToDataFrameConverter = providers.Singleton(GeneticDataToDataFrameConverter)
-    OpenSNPAggregator = providers.Singleton(OpenSNPAggregator)
-    OpenSNPDownloader = providers.Singleton(OpenSNPDownloader)
-    OpenSNPProgress = providers.Singleton(OpenSNPProgress)
 
     def wire(container: containers.DeclarativeContainer, mod='__main__'):
         import src

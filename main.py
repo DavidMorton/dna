@@ -17,4 +17,4 @@ if __name__ == '__main__':
     Container.wire(container)
 
     m = Main()
-    m.run_analysis('.data/dna_samples/glenn.23andme.txt')
+    m.run_analysis('.data/dna_samples/david.23andme.txt')
