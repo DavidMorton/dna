@@ -164,6 +164,8 @@ class NCBIDataFrameGenerator:
 
     def _get_rsid_json_file(self, rsid):
         json_filename = os.path.join(self._options.ncbi_data_cache, f'{rsid}.json')
+        if not os.path.exists(json_filename):
+            self._ncbi_data_downloader.download_individual_ncbi_data(rsid)
         with open(json_filename, 'r') as f:
             json_data = json.loads(f.read())
         return json_data
@@ -199,14 +201,14 @@ class NCBIDataFrameGenerator:
 
         if merged_dna is not None:
             requested_rsids = merged_dna['rsid'].tolist()
-            files = [x for x in files if x.replace('.json','') in requested_rsids]
+            missing_rsids = [x for x in requested_rsids if x.replace('.json','') not in files]
 
         result_list = []
         
-        rsids = [file.replace('.json','') for file in files]
+        #rsids = [file.replace('.json','') for file in files]
 
         client = Client()
-        futures = client.map(self._get_rsid_data, rsids)
+        futures = client.map(self._get_rsid_data, missing_rsids)
         fut = client.compute(futures)
         progress(fut)
         

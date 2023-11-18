@@ -1,0 +1,15 @@
+name: dna
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pandas==2.1.2
+  - pyarrow
+  - ipykernel
+  - tqdm
+  - requests
+  - openpyxl
+  - natsort
+  - dask[distributed]
+  - pip:
+    - dependency_injector
