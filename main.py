@@ -1,9 +1,8 @@
-
 from src import *
 from container import Container
 from dependency_injector.wiring import Provide
 
-#raise Exception('Read the readme, then comment this out if you still want to run this code.')
+raise Exception('Read the readme, then comment this out if you still want to run this code.')
 
 class Main():
     def __init__(self, dna_analyzer:DNAAnalyzer = Provide['DNAAnalyzer']):
