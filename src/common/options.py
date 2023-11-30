@@ -8,6 +8,12 @@ class Options:
         return data_folder
     
     @property
+    def public_data_folder(self):
+        data_folder = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', 'data'))
+        os.makedirs(data_folder, exist_ok=True)
+        return data_folder
+    
+    @property
     def opensnp_raw_data(self):
         return os.path.join(self.data_folder, 'opensnp')
     
@@ -40,6 +46,11 @@ class Options:
     @property
     def ncbi_dataframe_parquet(self):
         result = os.path.join(self.data_folder, 'ncbi_data.parquet')
+        return result
+    
+    @property
+    def public_ncbi_dataframe_parquet(self):
+        result = os.path.join(self.public_data_folder, 'ncbi_data.parquet')
         return result
     
     @property

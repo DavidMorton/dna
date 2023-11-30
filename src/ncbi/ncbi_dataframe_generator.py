@@ -228,6 +228,16 @@ class NCBIDataFrameGenerator:
         return dataframe
 
     def get_dataframe_of_data(self, merged_dna, allow_download=True, force_regenerate_dataframe=False):
+        public_path = self._options.public_ncbi_dataframe_parquet
+        if os.path.exists(public_path) and (not force_regenerate_dataframe):
+            print('This repo comes with a default, pre-processed version of the NCBI data, generated sometime')
+            print('around November 2023. Newer studies may not be reflected in this file.')
+            result = ''
+            while result.upper() not in ['Y','N']:
+                result = input('Would you like to use this file instead of generating a new one? (Y/N)? ')
+            if result.upper() == 'Y':
+                return pd.read_parquet(self._options.public_ncbi_dataframe_parquet)
+            
         new_data_found = self._ncbi_data_downloader.download_ncbi_data(merged_dna, allow_download)
 
         path = self._options.ncbi_dataframe_parquet
