@@ -46,5 +46,3 @@ class DNAAnalyzer:
         
         detected.to_excel(os.path.join(self._options.output_cache_folder(filename), f'{os.path.basename(filename).split(".")[0]}_variations.xlsx'), index=False)
         detected.to_parquet(os.path.join(self._options.output_cache_folder(filename), f'{os.path.basename(filename).split(".")[0]}_variations.parquet'))
-
-        pass
